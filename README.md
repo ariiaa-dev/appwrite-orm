@@ -100,7 +100,6 @@ const serverORM = new ServerORM(config);
 
 The ORM has now activated! On web this will autometically validate you database
 and throw an error if there's a difference between your schema and the database.
-
 On nodejs this will create a new database if it doesn't exist and validate the schema.
 If the schema is different AND autoMigrate is true, then it will modify the database to fit.
 
