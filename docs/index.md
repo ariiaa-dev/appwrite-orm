@@ -2,13 +2,14 @@
 
 A powerful TypeScript ORM package for Appwrite with separate web and server implementations, providing type-safe database operations with automatic validation and migration support.
 
+NOTE: This documentation is currently made using an AI model mostly because I am too lazy to write it myself
+
 ## Features
 
 - **Type Safety**: Full TypeScript support with automatic type inference from schema definitions
 - **Dual Environment**: Separate optimized implementations for web browsers and Node.js servers
 - **Automatic Validation**: Built-in data validation based on your schema definitions
 - **Migration Support**: Automatic database schema migration for server environments
-- **SQLAlchemy-inspired API**: Familiar query patterns for developers coming from Python/SQLAlchemy
 - **Comprehensive Error Handling**: Detailed error messages and custom error types
 
 ## Quick Example

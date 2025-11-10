@@ -10,11 +10,13 @@ npm install appwrite-orm appwrite
 
 ## Usage
 
+### Usage (Client / Web)
+
 ```typescript
-import { Table } from 'appwrite-orm';
+import { WebTable, ORMConfig, WebORM } from 'appwrite-orm';
 
 // Step 1: create your tables
-const testDatabase: Table = {
+const testDatabase: WebTable = {
   name: 'test-collection',
   schema: {
     name: { type: 'string', required: true },
@@ -24,7 +26,35 @@ const testDatabase: Table = {
 };
 
 // step 2: create your ORM config
-const config = {
+const config: ORMConfig = {
+  endpoint: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+  projectId: 'your-project-id',
+  databaseId: 'your-database-id',
+  apiKey: 'your-api-key-for-server',
+  tables: [testDatabase],
+};
+
+// Step 3: create your ORM instance
+const webORM = new WebORM(config);
+```
+
+### Usage (Server / Nodejs)
+
+```typescript
+import { ServerTable, ORMConfig, ServerORM } from 'appwrite-orm';
+
+// Step 1: create your tables
+const testDatabase: ServerTable = {
+  name: 'test-collection',
+  schema: {
+    name: { type: 'string', required: true },
+    age: { type: 'number', min: 0 },
+    isActive: { type: 'boolean', default: true }
+  }
+};
+
+// step 2: create your ORM config
+const config: ORMConfig = {
   endpoint: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXX',
   projectId: 'your-project-id',
   databaseId: 'your-database-id',
@@ -34,33 +64,14 @@ const config = {
 };
 
 // Step 3: create your ORM instance
-
-// ---- ON WEB -----
-const webORM = new WebORM(config);
-
-// ---- ON NODEJS ---
-const serverORM = new ServerORM(config);
+const webORM = new ServerORM(config);
 ```
 
-The ORM has now activated! On web this will autometically validate you database
-and throw an error if there's a difference between your schema and the database.
-On nodejs this will create a new database if it doesn't exist and validate the schema.
-If the schema is different AND autoMigrate is true, then it will modify the database to fit.
+The server ORM will autometically validate your code, and will either throw an error or Migrate the table
 
-### Running Tests Locally
-```bash
-# Run all tests
-npm test
+---------------
 
-# Run tests with coverage
-npm test -- --coverage
-
-# Run build
-npm run build
-
-# Type checking
-npx tsc --noEmit
-```
+For more documentation, go [read the docs](https://appwrite-orm.readthedocs.io)
 
 ## Contributing
 
