@@ -1,6 +1,6 @@
 {
   "name": "appwrite-orm",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A TypeScript ORM package for Appwrite with web and server support",
   "main": "dist/index.js",
   "readme": "https://appwrite-orm.readthedocs.io",
@@ -9,6 +9,7 @@
     "type": "git",
     "url": "https://github.com/raisfeld-ori/appwrite-orm"
   },
+  "categories": ["Extension Packs", "Data Science"],
   "types": "dist/index.d.ts",
   "exports": {
     ".": {

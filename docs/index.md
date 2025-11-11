@@ -1,49 +1,11 @@
 # Appwrite ORM
 
-A TypeScript ORM for Appwrite with type-safe schemas and auto-migration.
+A TypeScript ORM for Appwrite.
+This is based on the packages 'appwrite' and 'appwrite-node'. This package has both a client side and server side features.
 
-## Features
+This is a documentation (made mostly VIA AI, and a bit by me) on usage, development, and general guides for everything.
 
-- **Type-safe schemas** with TypeScript inference
-- **Auto-migration** on server (creates/updates collections)
-- **Integer & Float types** - explicit `'integer'` and `'float'` support
-- **Data validation** with detailed error messages
-- **Dual environments** - optimized for web and server
-
-## Quick Example
-
-```typescript
-import { ServerORM } from 'appwrite-orm/server';
-
-const orm = new ServerORM({
-  endpoint: process.env.APPWRITE_ENDPOINT!,
-  projectId: process.env.APPWRITE_PROJECT_ID!,
-  databaseId: process.env.APPWRITE_DATABASE_ID!,
-  apiKey: process.env.APPWRITE_API_KEY!,
-  autoMigrate: true
-});
-
-const db = await orm.init([{
-  name: 'users',
-  schema: {
-    name: { type: 'string', required: true },
-    email: { type: 'string', required: true },
-    age: { type: 'integer', min: 0 },
-    balance: { type: 'float', default: 0 },
-    isActive: { type: 'boolean', default: true }
-  }
-}]);
-
-// CRUD operations
-const user = await db.users.create({
-  name: 'John Doe',
-  email: 'john@example.com',
-  age: 30
-});
-
-const users = await db.users.query({ isActive: true });
-await db.users.update(user.$id, { age: 31 });
-```
+Also, THIS PACKAGE IS STILL INCOMPLETE! I am constantly adding new features and fixing bugs. If you encounter a bug or want to add a feature, I'd be happy to implement it. Just write something in the discussion on github
 
 ## Getting Started
 

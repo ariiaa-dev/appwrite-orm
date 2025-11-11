@@ -13,17 +13,18 @@ npm install appwrite-orm appwrite       # For web
 
 ## Quick Start
 
-### Server (Node.js)
+## Server-Side (Node.js)
 
 ```typescript
 import { ServerORM } from 'appwrite-orm/server';
+import { Query } from 'node-appwrite';
 
 const orm = new ServerORM({
   endpoint: process.env.APPWRITE_ENDPOINT!,
   projectId: process.env.APPWRITE_PROJECT_ID!,
   databaseId: process.env.APPWRITE_DATABASE_ID!,
   apiKey: process.env.APPWRITE_API_KEY!,
-  autoMigrate: true
+  autoMigrate: true // Auto-creates collections
 });
 
 const db = await orm.init([{
@@ -33,21 +34,39 @@ const db = await orm.init([{
     email: { type: 'string', required: true },
     age: { type: 'integer', min: 0 },
     balance: { type: 'float', default: 0 },
-    isActive: { type: 'boolean', default: true }
+    role: { type: ['admin', 'user'], enum: ['admin', 'user'], default: 'user' }
   }
 }]);
 
-// CRUD
-const user = await db.users.create({ name: 'John', email: 'john@example.com', age: 30 });
-const users = await db.users.query({ isActive: true });
-await db.users.update(user.$id, { age: 31 });
+// Create
+const user = await db.users.create({
+  name: 'John Doe',
+  email: 'john@example.com',
+  age: 30,
+  balance: 100.50
+});
+
+// Query
+const allUsers = await db.users.all();
+const activeUsers = await db.users.query({ role: 'admin' });
+
+// Advanced queries with Query builder
+const adults = await db.users.find([
+  Query.greaterThanEqual('age', 18),
+  Query.orderDesc('balance'),
+  Query.limit(10)
+]);
+
+// Update & Delete
+await db.users.update(user.$id, { balance: 200.75 });
 await db.users.delete(user.$id);
 ```
 
-### Web (Browser)
+## Client-Side (Browser/React/Vue)
 
 ```typescript
 import { WebORM } from 'appwrite-orm/web';
+import { Query } from 'appwrite';
 
 const orm = new WebORM({
   endpoint: import.meta.env.VITE_APPWRITE_ENDPOINT,
@@ -59,46 +78,20 @@ const db = orm.init([{
   name: 'posts',
   schema: {
     title: { type: 'string', required: true },
+    content: { type: 'string', required: true },
     views: { type: 'integer', default: 0 },
     published: { type: 'boolean', default: false }
   }
 }]);
 
-const post = await db.posts.create({ title: 'My Post' });
-```
+// CRUD operations
+const post = await db.posts.create({
+  title: 'My First Post',
+  content: 'Hello world!'
+});
 
-## Key Features
-
-- **Type-safe schemas** with TypeScript inference
-- **Auto-migration** on server (creates/updates collections)
-- **Integer & Float types** - use `'integer'` or `'float'` instead of generic `'number'`
-- **Data validation** with detailed error messages
-- **Query builder** using Appwrite Query helpers
-- **Separate SDKs** for web and server
-
-## Field Types
-
-```typescript
-{
-  // Strings
-  name: { type: 'string', required: true, size: 100 },
-  
-  // Numbers
-  age: { type: 'integer', min: 0, max: 150 },
-  price: { type: 'float', min: 0 },
-  
-  // Boolean
-  isActive: { type: 'boolean', default: true },
-  
-  // Date
-  createdAt: { type: 'Date' },
-  
-  // Enum
-  role: { type: ['admin', 'user'], enum: ['admin', 'user'], default: 'user' },
-  
-  // Arrays
-  tags: { type: 'string', array: true }
-}
+const posts = await db.posts.query({ published: true });
+await db.posts.update(post.$id, { views: 42 });
 ```
 
 ## License

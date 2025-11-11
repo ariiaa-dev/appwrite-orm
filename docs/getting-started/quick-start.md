@@ -83,19 +83,6 @@ const posts = await db.posts.query({ published: true });
 await db.posts.update(post.$id, { views: 42 });
 ```
 
-## Important: Integer vs Float
-
-Use explicit types for numbers:
-
-```typescript
-schema: {
-  age: { type: 'integer' },      // Whole numbers
-  price: { type: 'float' },      // Decimals
-  count: { type: 'integer' },
-  balance: { type: 'float' }
-}
-```
-
 ## Next Steps
 
 - [Schema Definition](../guides/schema-definition.md)
