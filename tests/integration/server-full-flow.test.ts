@@ -32,7 +32,14 @@ interface Comment {
   createdAt: string;
 }
 
-describe('Server ORM Full-Flow Integration Tests', () => {
+const hasRequiredEnvVars = !!(process.env.APPWRITE_ENDPOINT && 
+  process.env.APPWRITE_PROJECT_ID && 
+  process.env.APPWRITE_DATABASE_ID && 
+  process.env.APPWRITE_API_KEY);
+
+const describeIfEnv = hasRequiredEnvVars ? describe : describe.skip;
+
+describeIfEnv('Server ORM Full-Flow Integration Tests', () => {
   let orm: ServerORM;
   let db: any;
   const testPrefix = `test_${Date.now()}_`;
@@ -97,23 +104,11 @@ describe('Server ORM Full-Flow Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    // Validate environment variables
-    if (!process.env.APPWRITE_ENDPOINT || 
-        !process.env.APPWRITE_PROJECT_ID || 
-        !process.env.APPWRITE_DATABASE_ID || 
-        !process.env.APPWRITE_API_KEY) {
-      console.warn(
-        'Missing required environment variables. Please create a .env file with:\n' +
-        'APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_DATABASE_ID, APPWRITE_API_KEY'
-      );
-      return;
-    }
-
     orm = new ServerORM({
-      endpoint: process.env.APPWRITE_ENDPOINT,
-      projectId: process.env.APPWRITE_PROJECT_ID,
-      databaseId: process.env.APPWRITE_DATABASE_ID,
-      apiKey: process.env.APPWRITE_API_KEY,
+      endpoint: process.env.APPWRITE_ENDPOINT!,
+      projectId: process.env.APPWRITE_PROJECT_ID!,
+      databaseId: process.env.APPWRITE_DATABASE_ID!,
+      apiKey: process.env.APPWRITE_API_KEY!,
       autoMigrate: true
     });
 
@@ -134,12 +129,6 @@ describe('Server ORM Full-Flow Integration Tests', () => {
   describe('CRUD Operations', () => {
     let userId: string;
     let postId: string;
-
-    beforeEach(() => {
-      if (!orm || !db) {
-        return pending('Skipping: Missing environment variables');
-      }
-    });
 
     it('should create a user document', async () => {
       const user = await db.table(usersTable.name).create({
@@ -247,12 +236,6 @@ describe('Server ORM Full-Flow Integration Tests', () => {
   });
 
   describe('Index Operations', () => {
-    beforeEach(() => {
-      if (!orm || !db) {
-        return pending('Skipping: Missing environment variables');
-      }
-    });
-
     it('should list indexes for a collection', async () => {
       const indexes = await db.table(usersTable.name).listIndexes();
 
@@ -283,12 +266,6 @@ describe('Server ORM Full-Flow Integration Tests', () => {
     let user2Id: string;
     let post1Id: string;
     let post2Id: string;
-
-    beforeEach(() => {
-      if (!orm || !db) {
-        return pending('Skipping: Missing environment variables');
-      }
-    });
 
     beforeAll(async () => {
       // Create test data for joins
@@ -380,12 +357,6 @@ describe('Server ORM Full-Flow Integration Tests', () => {
   });
 
   describe('Bulk Operations', () => {
-    beforeEach(() => {
-      if (!orm || !db) {
-        return pending('Skipping: Missing environment variables');
-      }
-    });
-
     it('should bulk create multiple users', async () => {
       const users = await db.table(usersTable.name).bulkCreate([
         {
@@ -430,12 +401,6 @@ describe('Server ORM Full-Flow Integration Tests', () => {
   });
 
   describe('Validation', () => {
-    beforeEach(() => {
-      if (!orm || !db) {
-        return pending('Skipping: Missing environment variables');
-      }
-    });
-
     it('should validate required fields', async () => {
       await expect(
         db.table(usersTable.name).create({
@@ -457,12 +422,6 @@ describe('Server ORM Full-Flow Integration Tests', () => {
   });
 
   describe('Pagination and Ordering', () => {
-    beforeEach(() => {
-      if (!orm || !db) {
-        return pending('Skipping: Missing environment variables');
-      }
-    });
-
     it('should paginate results', async () => {
       const page1 = await db.table(usersTable.name).all({ limit: 2, offset: 0 });
       const page2 = await db.table(usersTable.name).all({ limit: 2, offset: 2 });
