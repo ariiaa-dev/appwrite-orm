@@ -1,11 +1,13 @@
 import { Databases, Models } from 'node-appwrite';
 import { TableDefinition, ORMConfig, ORMMigrationError } from '../shared/types';
 import { AttributeManager } from './attribute-manager';
+import { IndexManager } from './index-manager';
 import { PermissionManager } from './permission-manager';
 import { DatabasesWrapper } from './appwrite-extended';
 
 export class Migration {
   private attributeManager: AttributeManager;
+  private indexManager: IndexManager;
   private permissionManager: PermissionManager;
   private db: DatabasesWrapper;
 
@@ -15,6 +17,7 @@ export class Migration {
   ) {
     this.db = new DatabasesWrapper(databases);
     this.attributeManager = new AttributeManager(databases, config);
+    this.indexManager = new IndexManager(databases, config);
     this.permissionManager = new PermissionManager();
   }
 
@@ -103,6 +106,24 @@ export class Migration {
         }
       }
 
+      // Wait for all attributes to be available before creating indexes
+      // Appwrite creates attributes asynchronously, so we need to poll until they're ready
+      if (table.indexes && table.indexes.length > 0) {
+        await this.waitForAttributesAvailable(collectionId, Object.keys(table.schema));
+      }
+
+      // Manage indexes if defined
+      if (table.indexes && table.indexes.length > 0) {
+        const existingIndexes = new Set(collection.indexes?.map((idx) => idx.key) || []);
+        
+        // Create new indexes
+        for (const index of table.indexes) {
+          if (!existingIndexes.has(index.key)) {
+            await this.indexManager.createIndex(collectionId, index);
+          }
+        }
+      }
+
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new ORMMigrationError(`Failed to migrate collection ${table.name}: ${message}`);
@@ -157,5 +178,42 @@ export class Migration {
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new ORMMigrationError(`Failed to validate collection ${table.name}: ${message}`);
     }
+  }
+
+  /**
+   * Wait for attributes to become available in Appwrite
+   * Appwrite creates attributes asynchronously, so we poll until they're all available
+   */
+  private async waitForAttributesAvailable(
+    collectionId: string,
+    attributeKeys: string[],
+    maxAttempts: number = 30,
+    delayMs: number = 1000
+  ): Promise<void> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const collection = await this.db.getCollection(this.config.databaseId, collectionId);
+        const availableAttributes = new Set(collection.attributes?.map((attr: any) => attr.key) || []);
+        
+        // Check if all required attributes are available and have status 'available'
+        const allAvailable = attributeKeys.every(key => {
+          const attr = collection.attributes?.find((a: any) => a.key === key);
+          return attr && attr.status === 'available';
+        });
+        
+        if (allAvailable) {
+          return; // All attributes are ready
+        }
+      } catch (error) {
+        // Collection might not be ready yet, continue polling
+      }
+      
+      // Wait before next attempt
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+    
+    throw new ORMMigrationError(
+      `Timeout waiting for attributes to become available in collection ${collectionId}`
+    );
   }
 }

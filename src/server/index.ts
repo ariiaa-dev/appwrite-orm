@@ -4,6 +4,7 @@ export { ServerORMInstance } from './orm-instance';
 export { ServerTable } from './table';
 export { Migration } from './migration';
 export { AttributeManager } from './attribute-manager';
+export { IndexManager } from './index-manager';
 export { PermissionManager } from './permission-manager';
 export { DatabasesWrapper, ClientWrapper } from './appwrite-extended';
 

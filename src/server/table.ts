@@ -1,12 +1,12 @@
 import { Databases, Query, Models } from 'node-appwrite';
-import { DatabaseSchema } from '../shared/types';
+import { DatabaseSchema, IndexDefinition } from '../shared/types';
 import { BaseTable, FilterOptions, QueryOptions, SchemaToType } from '../shared/table';
 import { DatabasesWrapper } from './appwrite-extended';
 
 // Type for node-appwrite query parameters
 type QueryType = string;
 
-export class ServerTable<T extends DatabaseSchema> extends BaseTable<T> {
+export class ServerTable<T extends DatabaseSchema, TInterface = SchemaToType<T>> extends BaseTable<T, TInterface> {
   private db: DatabasesWrapper;
 
   constructor(
@@ -23,7 +23,7 @@ export class ServerTable<T extends DatabaseSchema> extends BaseTable<T> {
   /**
    * Override query method to use node-appwrite Query instead of web SDK Query
    */
-  async query(filters?: FilterOptions, options?: QueryOptions): Promise<SchemaToType<T>[]> {
+  async query(filters?: FilterOptions, options?: QueryOptions): Promise<TInterface[]> {
     const queries: QueryType[] = [];
 
     // Build filter queries using node-appwrite Query
@@ -67,20 +67,20 @@ export class ServerTable<T extends DatabaseSchema> extends BaseTable<T> {
       queries
     );
 
-    return result.documents as SchemaToType<T>[];
+    return result.documents as TInterface[];
   }
 
   /**
    * Override find to use node-appwrite queries
    */
-  async find(queries: QueryType[]): Promise<SchemaToType<T>[]> {
+  async find(queries: QueryType[]): Promise<TInterface[]> {
     const result = await this.databases.listDocuments(
       this.databaseId,
       this.collectionId,
       queries
     );
 
-    return result.documents as SchemaToType<T>[];
+    return result.documents as TInterface[];
   }
 
   /**
@@ -110,7 +110,7 @@ export class ServerTable<T extends DatabaseSchema> extends BaseTable<T> {
   /**
    * Override findOne to use node-appwrite Query
    */
-  async findOne(queries: QueryType[]): Promise<SchemaToType<T> | null> {
+  async findOne(queries: QueryType[]): Promise<TInterface | null> {
     const queriesWithLimit = [...queries, Query.limit(1)];
     const results = await this.find(queriesWithLimit);
     return results.length > 0 ? results[0] : null;
@@ -166,5 +166,34 @@ export class ServerTable<T extends DatabaseSchema> extends BaseTable<T> {
     for (const id of ids) {
       await this.delete(id);
     }
+  }
+
+  /**
+   * Create an index on this collection (server-only feature)
+   */
+  async createIndex(index: IndexDefinition): Promise<void> {
+    await this.db.createIndex(
+      this.databaseId,
+      this.collectionId,
+      index.key,
+      index.type,
+      index.attributes,
+      index.orders
+    );
+  }
+
+  /**
+   * Delete an index from this collection (server-only feature)
+   */
+  async deleteIndex(key: string): Promise<void> {
+    await this.db.deleteIndex(this.databaseId, this.collectionId, key);
+  }
+
+  /**
+   * List all indexes for this collection (server-only feature)
+   */
+  async listIndexes(): Promise<any[]> {
+    const collection = await this.db.getCollection(this.databaseId, this.collectionId);
+    return collection.indexes || [];
   }
 }

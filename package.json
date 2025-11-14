@@ -1,7 +1,7 @@
 {
   "name": "appwrite-orm",
-  "version": "0.1.4",
-  "description": "A TypeScript ORM package for Appwrite with web and server support",
+  "version": "0.2.0",
+  "description": "A powerful TypeScript ORM for Appwrite with type-safe schemas, auto-migration, validation, indexes, and join support for both server and web environments",
   "main": "dist/index.js",
   "readme": "https://appwrite-orm.readthedocs.io",
   "homepage": "https://appwrite-orm.readthedocs.io",
@@ -9,7 +9,9 @@
     "type": "git",
     "url": "https://github.com/raisfeld-ori/appwrite-orm"
   },
-  "categories": ["Extension Packs", "Data Science"],
+  "bugs": {
+    "url": "https://github.com/raisfeld-ori/appwrite-orm/issues"
+  },
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
@@ -32,6 +34,7 @@
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:integration": "jest tests/integration --detectOpenHandles --forceExit",
     "test:usage": "ts-node scripts/usage_tests.ts",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build",
@@ -42,13 +45,38 @@
   },
   "keywords": [
     "appwrite",
-    "ORM",
     "orm",
     "database",
-    "typescript"
+    "typescript",
+    "type-safe",
+    "schema",
+    "migration",
+    "validation",
+    "backend",
+    "baas",
+    "backend-as-a-service",
+    "web",
+    "server",
+    "nodejs",
+    "client",
+    "api",
+    "query-builder",
+    "nosql",
+    "document-database",
+    "join",
+    "index",
+    "crud",
+    "data-layer",
+    "type-safety"
   ],
-  "author": "Ori raisfeld",
+  "author": {
+    "name": "Ori Raisfeld",
+    "url": "https://github.com/raisfeld-ori"
+  },
   "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",
@@ -64,5 +92,10 @@
   },
   "peerDependencies": {
     "appwrite": ">=13.0.0"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }

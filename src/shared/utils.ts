@@ -17,6 +17,7 @@ export class TypeMapper {
       case 'boolean':
         return 'boolean';
       case 'Date':
+      case 'datetime':
         return 'datetime';
       default:
         return 'string';
@@ -157,6 +158,7 @@ export class Validator {
       case 'boolean':
         return typeof value === 'boolean';
       case 'Date':
+      case 'datetime':
         return value instanceof Date || typeof value === 'string';
       default:
         return false;

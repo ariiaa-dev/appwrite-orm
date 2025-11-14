@@ -1,27 +1,61 @@
 # Appwrite ORM
 
-A TypeScript ORM for Appwrite.
-This is based on the packages 'appwrite' and 'appwrite-node'. This package has both a client side and server side features.
+A type-safe TypeScript ORM for Appwrite that works in both Node.js and browsers.
 
-This is a documentation (made mostly VIA AI, and a bit by me) on usage, development, and general guides for everything.
+## What is it?
 
-Also, THIS PACKAGE IS STILL INCOMPLETE! I am constantly adding new features and fixing bugs. If you encounter a bug or want to add a feature, I'd be happy to implement it. Just write something in the discussion on github
+Appwrite ORM provides a simple way to work with Appwrite databases using TypeScript. Define your schemas once, get type safety everywhere, and let the ORM handle the rest.
 
-## Getting Started
+## Quick Example
 
-1. [Installation](getting-started/installation.md)
-2. [Quick Start](getting-started/quick-start.md)
-3. [Configuration](getting-started/configuration.md)
+```typescript
+import { ServerORM } from 'appwrite-orm/server';
 
-## Guides
+const orm = new ServerORM({
+  endpoint: 'https://cloud.appwrite.io/v1',
+  projectId: 'my-project',
+  databaseId: 'my-database',
+  apiKey: 'api-key',
+  autoMigrate: true
+});
 
-- [Schema Definition](guides/schema-definition.md) - Define schemas with integer/float types
-- [Querying Data](guides/querying-data.md) - Query and filter data
-- [Data Validation](guides/data-validation.md) - Validation rules
+const db = await orm.init([{
+  name: 'users',
+  schema: {
+    name: { type: 'string', required: true },
+    email: { type: 'string', required: true },
+    age: { type: 'integer' }
+  }
+}]);
 
-## API Reference
+// Create a user
+const user = await db.table('users').create({
+  name: 'John Doe',
+  email: 'john@example.com',
+  age: 30
+});
 
-- [Server ORM](api/server-orm.md) - Node.js server API
-- [Web ORM](api/web-orm.md) - Browser client API
-- [Table Operations](api/table-operations.md) - CRUD methods
-- [Migration](api/migration.md) - Auto-migration system
+// Query users
+const users = await db.table('users').query({ age: 30 });
+```
+
+## Choose Your Environment
+
+- **[Node.js/Server →](server/setup.md)** - For backend applications with full migration support
+- **[Web/Client →](web/setup.md)** - For frontend applications in React, Vue, or vanilla JS
+
+## Installation
+
+```bash
+# For Node.js
+npm install appwrite-orm node-appwrite
+
+# For Web
+npm install appwrite-orm appwrite
+```
+
+## Next Steps
+
+- [Getting Started](getting-started/quickstart.md) - Install and configure
+- [Server Guide](server/setup.md) - Node.js backend usage
+- [Web Guide](web/setup.md) - Browser/frontend usage

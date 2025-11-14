@@ -1,33 +1,34 @@
-import { Databases, Models, Query as NodeQuery } from 'node-appwrite';
 import { TableDefinition, DatabaseSchema, JoinOptions } from '../shared/types';
-import { ServerTable } from './table';
+import { FakeDatabaseClient } from './fake-database';
+import { FakeTable } from './fake-table';
 
-// Type helper to create table map from table definitions
-type CreateTableMap<T extends TableDefinition[]> = {
-  [K in T[number]['name']]: ServerTable<Extract<T[number], { name: K }>['schema']>;
-};
-
-export class ServerORMInstance<T extends TableDefinition[]> {
-  private tables: Map<string, ServerTable<DatabaseSchema>> = new Map();
+/**
+ * Fake ORM instance for development mode
+ * Mimics WebORMInstance API but uses cookies instead of Appwrite
+ */
+export class FakeORMInstance<T extends TableDefinition[]> {
+  private tables: Map<string, FakeTable<any>> = new Map();
+  private fakeDb: FakeDatabaseClient;
 
   constructor(
-    private databases: Databases,
-    private databaseId: string,
+    databaseId: string,
     private schemas: Map<string, DatabaseSchema>,
     private collectionIds: Map<string, string> = new Map()
   ) {
+    this.fakeDb = new FakeDatabaseClient(databaseId);
+
     // Initialize table instances
     for (const [name, schema] of schemas.entries()) {
       const collectionId = collectionIds.get(name) || name;
-      const table = new ServerTable(databases, databaseId, collectionId, schema);
+      const table = new FakeTable(this.fakeDb, collectionId, schema);
       this.tables.set(name, table);
     }
   }
 
   /**
-   * Get a table instance by name (similar to SQLAlchemy's table access)
+   * Get a table instance by name
    */
-  table<K extends T[number]['name']>(name: K): ServerTable<Extract<T[number], { name: K }>['schema'], any> {
+  table<K extends T[number]['name']>(name: K): FakeTable<Extract<T[number], { name: K }>['schema'], any> {
     const table = this.tables.get(name);
     if (!table) {
       throw new Error(`Table ${name} not found`);
@@ -41,9 +42,9 @@ export class ServerORMInstance<T extends TableDefinition[]> {
    */
   async create<K extends T[number]['name']>(
     collection: K,
-    data: Record<string, unknown>
-  ): Promise<Models.Document> {
-    return this.table(collection).create(data as any) as Promise<Models.Document>;
+    data: any
+  ): Promise<any> {
+    return this.table(collection).create(data);
   }
 
   /**
@@ -53,9 +54,9 @@ export class ServerORMInstance<T extends TableDefinition[]> {
   async update<K extends T[number]['name']>(
     collection: K,
     documentId: string,
-    data: Record<string, unknown>
-  ): Promise<Models.Document> {
-    return this.table(collection).update(documentId, data as any) as Promise<Models.Document>;
+    data: any
+  ): Promise<any> {
+    return this.table(collection).update(documentId, data);
   }
 
   /**
@@ -65,28 +66,23 @@ export class ServerORMInstance<T extends TableDefinition[]> {
   async get<K extends T[number]['name']>(
     collection: K,
     documentId: string
-  ): Promise<Models.Document | null> {
-    return this.table(collection).get(documentId) as Promise<Models.Document | null>;
+  ): Promise<any> {
+    return this.table(collection).get(documentId);
   }
 
   /**
-   * Legacy method - List documents with optional queries
+   * Legacy method - List documents
    * @deprecated Use table(name).query() or table(name).all() instead
    */
   async list<K extends T[number]['name']>(
     collection: K,
     queries?: string[]
   ): Promise<{
-    documents: Models.Document[];
+    documents: any[];
     total: number;
   }> {
-    if (queries) {
-      const documents = await this.table(collection).find(queries);
-      return { documents: documents as Models.Document[], total: documents.length };
-    } else {
-      const documents = await this.table(collection).all();
-      return { documents: documents as Models.Document[], total: documents.length };
-    }
+    const documents = await this.table(collection).all();
+    return { documents, total: documents.length };
   }
 
   /**
@@ -98,28 +94,7 @@ export class ServerORMInstance<T extends TableDefinition[]> {
   }
 
   /**
-   * Legacy method - Create a new collection (server-only feature)
-   * @deprecated Use table(name).createCollection() instead
-   */
-  async createCollection<K extends T[number]['name']>(
-    collectionId: K,
-    name: string,
-    permissions?: string[]
-  ): Promise<void> {
-    return this.table(collectionId).createCollection(name, permissions);
-  }
-
-  /**
-   * Legacy method - Delete a collection (server-only feature)
-   * @deprecated Use table(name).deleteCollection() instead
-   */
-  async deleteCollection<K extends T[number]['name']>(collectionId: K): Promise<void> {
-    return this.table(collectionId).deleteCollection();
-  }
-
-  /**
-   * Join two collections by fetching related documents
-   * This performs a client-side join by fetching documents from both collections
+   * Join two collections (simplified in development mode)
    */
   async join<
     K1 extends T[number]['name'],
@@ -153,20 +128,13 @@ export class ServerORMInstance<T extends TableDefinition[]> {
       }));
     }
 
-    // Fetch related documents from second collection
+    // Fetch all documents from second collection and filter manually
+    const allDocs2 = await table2.query(filters2);
     const referenceKey = options.referenceKey || '$id';
-    const queries = [NodeQuery.equal(referenceKey, foreignKeyValues)];
     
-    if (filters2) {
-      for (const [key, value] of Object.entries(filters2)) {
-        if (value !== undefined && value !== null) {
-          const valueArray = Array.isArray(value) ? value : [value];
-          queries.push(NodeQuery.equal(key, valueArray));
-        }
-      }
-    }
-
-    const docs2 = await table2.find(queries);
+    const docs2 = allDocs2.filter((doc: any) => 
+      foreignKeyValues.includes(doc[referenceKey])
+    );
 
     // Create a map for quick lookup
     const docs2Map = new Map();
@@ -192,7 +160,7 @@ export class ServerORMInstance<T extends TableDefinition[]> {
   }
 
   /**
-   * Left join two collections - includes all documents from collection1 even if no match in collection2
+   * Left join two collections
    */
   async leftJoin<
     K1 extends T[number]['name'],
@@ -204,12 +172,11 @@ export class ServerORMInstance<T extends TableDefinition[]> {
     filters1?: Record<string, unknown>,
     filters2?: Record<string, unknown>
   ): Promise<any[]> {
-    // Left join is the default behavior of join method
     return this.join(collection1, collection2, options, filters1, filters2);
   }
 
   /**
-   * Inner join two collections - only includes documents where there's a match in both collections
+   * Inner join two collections
    */
   async innerJoin<
     K1 extends T[number]['name'],
@@ -226,5 +193,12 @@ export class ServerORMInstance<T extends TableDefinition[]> {
     
     // Filter out results where joined data is null
     return results.filter((doc: any) => doc[joinAlias] !== null);
+  }
+
+  /**
+   * Clear all development data
+   */
+  clearAll(): void {
+    this.fakeDb.clearDatabase();
   }
 }

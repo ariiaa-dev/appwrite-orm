@@ -35,7 +35,7 @@ export interface FilterOptions {
   [key: string]: unknown;
 }
 
-export abstract class BaseTable<T extends DatabaseSchema> {
+export abstract class BaseTable<T extends DatabaseSchema, TInterface = SchemaToType<T>> {
   protected databases: Databases;
   protected databaseId: string;
   protected collectionId: string;
@@ -56,14 +56,14 @@ export abstract class BaseTable<T extends DatabaseSchema> {
   /**
    * Get a single document by ID (similar to SQLAlchemy's get)
    */
-  async get(id: string): Promise<SchemaToType<T> | null> {
+  async get(id: string): Promise<TInterface | null> {
     try {
       const result = await this.databases.getDocument(
         this.databaseId,
         this.collectionId,
         id
       );
-      return result as SchemaToType<T>;
+      return result as TInterface;
     } catch (error: unknown) {
       if (error instanceof Error && 'code' in error && (error as any).code === 404) {
         return null;
@@ -75,7 +75,7 @@ export abstract class BaseTable<T extends DatabaseSchema> {
   /**
    * Get a single document by ID, throw error if not found (similar to SQLAlchemy's get_or_404)
    */
-  async getOrFail(id: string): Promise<SchemaToType<T>> {
+  async getOrFail(id: string): Promise<TInterface> {
     const result = await this.get(id);
     if (!result) {
       throw new Error(`Document with ID ${id} not found in collection ${this.collectionId}`);
@@ -86,7 +86,7 @@ export abstract class BaseTable<T extends DatabaseSchema> {
   /**
    * Query documents with filters (similar to SQLAlchemy's filter)
    */
-  async query(filters?: FilterOptions, options?: QueryOptions): Promise<SchemaToType<T>[]> {
+  async query(filters?: FilterOptions, options?: QueryOptions): Promise<TInterface[]> {
     const queries: string[] = [];
 
     // Build filter queries
@@ -130,20 +130,20 @@ export abstract class BaseTable<T extends DatabaseSchema> {
       queries
     );
 
-    return result.documents as SchemaToType<T>[];
+    return result.documents as TInterface[];
   }
 
   /**
    * Get all documents (similar to SQLAlchemy's all())
    */
-  async all(options?: QueryOptions): Promise<SchemaToType<T>[]> {
+  async all(options?: QueryOptions): Promise<TInterface[]> {
     return this.query(undefined, options);
   }
 
   /**
    * Get first document matching filters (similar to SQLAlchemy's first())
    */
-  async first(filters?: FilterOptions): Promise<SchemaToType<T> | null> {
+  async first(filters?: FilterOptions): Promise<TInterface | null> {
     const results = await this.query(filters, { limit: 1 });
     return results.length > 0 ? results[0] : null;
   }
@@ -151,7 +151,7 @@ export abstract class BaseTable<T extends DatabaseSchema> {
   /**
    * Get first document or fail (similar to SQLAlchemy's first_or_404())
    */
-  async firstOrFail(filters?: FilterOptions): Promise<SchemaToType<T>> {
+  async firstOrFail(filters?: FilterOptions): Promise<TInterface> {
     const result = await this.first(filters);
     if (!result) {
       throw new Error(`No document found in collection ${this.collectionId} with given filters`);
@@ -186,7 +186,7 @@ export abstract class BaseTable<T extends DatabaseSchema> {
   /**
    * Create a new document (similar to SQLAlchemy's create)
    */
-  async create(data: Partial<Omit<SchemaToType<T>, '$id'>>): Promise<SchemaToType<T>> {
+  async create(data: Partial<Omit<SchemaToType<T>, '$id'>>): Promise<TInterface> {
     // Validate data against schema
     this.validateData(data, true);
 
@@ -197,13 +197,13 @@ export abstract class BaseTable<T extends DatabaseSchema> {
       data as Record<string, unknown>
     );
 
-    return result as SchemaToType<T>;
+    return result as TInterface;
   }
 
   /**
    * Update a document by ID
    */
-  async update(id: string, data: Partial<Omit<SchemaToType<T>, '$id'>>): Promise<SchemaToType<T>> {
+  async update(id: string, data: Partial<Omit<SchemaToType<T>, '$id'>>): Promise<TInterface> {
     // Validate data against schema (partial validation for updates)
     this.validateData(data, false);
 
@@ -214,7 +214,7 @@ export abstract class BaseTable<T extends DatabaseSchema> {
       data as Record<string, unknown>
     );
 
-    return result as SchemaToType<T>;
+    return result as TInterface;
   }
 
   /**
@@ -231,20 +231,20 @@ export abstract class BaseTable<T extends DatabaseSchema> {
   /**
    * Find documents with more complex queries
    */
-  async find(queries: string[]): Promise<SchemaToType<T>[]> {
+  async find(queries: string[]): Promise<TInterface[]> {
     const result = await this.databases.listDocuments(
       this.databaseId,
       this.collectionId,
       queries
     );
 
-    return result.documents as SchemaToType<T>[];
+    return result.documents as TInterface[];
   }
 
   /**
    * Find one document with complex queries
    */
-  async findOne(queries: string[]): Promise<SchemaToType<T> | null> {
+  async findOne(queries: string[]): Promise<TInterface | null> {
     const queriesWithLimit = [...queries, Query.limit(1)];
     const results = await this.find(queriesWithLimit);
     return results.length > 0 ? results[0] : null;

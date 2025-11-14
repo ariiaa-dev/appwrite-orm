@@ -18,6 +18,7 @@ export type TypeScriptType =
   | 'float'
   | 'boolean'
   | 'Date'
+  | 'datetime'
   | string[]; // for enums
 
 export interface DatabaseField {
@@ -35,11 +36,13 @@ export interface DatabaseSchema {
   [fieldName: string]: DatabaseField;
 }
 
-export interface TableDefinition<T extends DatabaseSchema = DatabaseSchema> {
+export interface TableDefinition<T extends DatabaseSchema = DatabaseSchema, TInterface = any> {
   name: string;
   id?: string; // Optional collection ID, defaults to name if not provided
   schema: T;
   role?: Record<string, unknown>; // Optional JSON role, defaults to public
+  interface?: TInterface; // Optional TypeScript interface for type-safe responses
+  indexes?: IndexDefinition[]; // Optional indexes for the collection
 }
 
 // Legacy alias for backward compatibility
@@ -52,6 +55,7 @@ export interface ORMConfig {
   apiKey?: string; // Only for server-side
   autoMigrate?: boolean; // Only for server-side
   autoValidate?: boolean; // Validate database structure on init (defaults to true, always true if autoMigrate is true)
+  development?: boolean; // For web client only - use cookies instead of Appwrite API
 }
 
 // Validation function for required config values
@@ -91,4 +95,24 @@ export class ORMMigrationError extends Error {
     super(message);
     this.name = 'ORMMigrationError';
   }
+}
+
+export type IndexType = 'key' | 'fulltext' | 'unique';
+
+export interface IndexDefinition {
+  key: string; // Unique index identifier
+  type: IndexType;
+  attributes: string[]; // Array of attribute keys
+  orders?: ('ASC' | 'DESC')[]; // Optional sort orders for each attribute
+}
+
+// Join types for querying related data
+export interface JoinOptions {
+  foreignKey: string; // The field in the first collection that references the second
+  referenceKey?: string; // The field in the second collection (defaults to '$id')
+  as?: string; // Alias for the joined data in results
+}
+
+export interface JoinResult<T, U> {
+  [key: string]: T & { [joinAlias: string]: U | U[] | null };
 }

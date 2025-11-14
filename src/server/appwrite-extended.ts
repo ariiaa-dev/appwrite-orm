@@ -179,6 +179,29 @@ export class DatabasesWrapper {
   ): Promise<any> {
     return this.databases.createEnumAttribute(databaseId, collectionId, key, elements, required, defaultValue || undefined, array);
   }
+
+  // Index operations
+
+  /**
+   * Create an index
+   */
+  async createIndex(
+    databaseId: string,
+    collectionId: string,
+    key: string,
+    type: string,
+    attributes: string[],
+    orders?: string[]
+  ): Promise<any> {
+    return this.databases.createIndex(databaseId, collectionId, key, type as any, attributes, orders as any);
+  }
+
+  /**
+   * Delete an index
+   */
+  async deleteIndex(databaseId: string, collectionId: string, key: string): Promise<void> {
+    await this.databases.deleteIndex(databaseId, collectionId, key);
+  }
 }
 
 /**

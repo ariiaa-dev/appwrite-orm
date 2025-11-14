@@ -1,9 +1,9 @@
 import { Databases } from 'appwrite';
 import { DatabaseSchema } from '../shared/types';
-import { BaseTable } from '../shared/table';
+import { BaseTable, SchemaToType } from '../shared/table';
 import { WebValidator } from './validator';
 
-export class WebTable<T extends DatabaseSchema> extends BaseTable<T> {
+export class WebTable<T extends DatabaseSchema, TInterface = SchemaToType<T>> extends BaseTable<T, TInterface> {
   constructor(
     databases: Databases,
     databaseId: string,
