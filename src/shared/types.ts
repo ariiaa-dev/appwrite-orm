@@ -69,7 +69,7 @@ export function validateRequiredConfig(config: ORMConfig): void {
     }
   }
 
-  if (missingFields.length > 0) {
+  if (missingFields.length > 0 && !config.development) {
     throw new Error(`Missing required configuration values: ${missingFields.join(', ')}`);
   }
 }

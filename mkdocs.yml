@@ -4,21 +4,23 @@ site_author: Ori Raisfeld
 site_url: https://appwrite-orm.readthedocs.io/
 
 repo_name: appwrite-orm
-repo_url: https://github.com/your-username/appwrite-orm
+repo_url: https://github.com/raisfeld-ori/appwrite-orm
 edit_uri: edit/main/docs/
 
 theme:
   name: material
+  logo: logo_small.png
+  favicon: logo_small.png
   palette:
     - scheme: default
-      primary: deep purple
-      accent: purple
+      primary: red
+      accent: red
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: deep purple
-      accent: purple
+      primary: red
+      accent: red
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -77,6 +79,6 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-username/appwrite-orm
+      link: https://github.com/raisfeld-ori/appwrite-orm
     - icon: fontawesome/brands/npm
       link: https://www.npmjs.com/package/appwrite-orm

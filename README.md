@@ -1,4 +1,7 @@
-# Appwrite ORM
+<div align="center">
+  <img src="logo.png" alt="Appwrite ORM Logo" width="200"/>
+  <h1>Appwrite ORM</h1>
+</div>
 
 [![npm version](https://badge.fury.io/js/appwrite-orm.svg)](https://www.npmjs.com/package/appwrite-orm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
