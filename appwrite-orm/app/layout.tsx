@@ -15,7 +15,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Appwrite ORM - Type-Safe TypeScript ORM for Appwrite",
   description: "A powerful, type-safe TypeScript ORM for Appwrite with automatic migrations, schema validation, indexes, and join support. Works seamlessly in both server-side and client-side environments.",
-  manifest: '/site.webmanifest',
   icons: {
     icon: [
       { url: '/favicon.ico' },
