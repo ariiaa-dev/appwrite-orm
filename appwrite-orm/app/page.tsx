@@ -361,15 +361,15 @@ const user = await db.table('users').create({
                   <Star className="h-5 w-5 text-[--color-primary-500] dark:text-[--color-primary-400] shrink-0 mt-1" />
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Export to SQL / Firebase / Text</h3>
-                    <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-                      Want to switch away from appwrite? You can now use:
-                      <div className="flex flex-col">
-                      <code>db.exportToSQL()</code>
-                      <code>db.exportToFirebase()</code>
-                      <code>db.exportToText()</code>
-                      To migrate into other formats.
+                    <div className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                      <p className="mb-2">Want to switch away from appwrite? You can now use:</p>
+                      <div className="flex flex-col space-y-1 font-mono text-sm">
+                        <code>db.exportToSQL()</code>
+                        <code>db.exportToFirebase()</code>
+                        <code>db.exportToText()</code>
                       </div>
-                    </p>
+                      <p className="mt-2">To migrate into other formats.</p>
+                    </div>
                   </div>
                 </motion.li>
               </ul>
