@@ -57,7 +57,7 @@ export class Migration {
       try {
         await this.db.getDatabase(this.config.databaseId);
       } catch (error) {
-        throw new ORMMigrationError(`Database ${this.config.databaseId} does not exist`);
+        throw new ORMMigrationError(`GET to database failed: ${error}. Are you sure this database exists?`);
       }
 
       // Validate each collection
@@ -151,7 +151,7 @@ export class Migration {
       try {
         collection = await this.db.getCollection(this.config.databaseId, collectionId);
       } catch (error) {
-        throw new ORMMigrationError(`Collection ${collectionId} does not exist in database`);
+        throw new ORMMigrationError(`GET to database failed: ${error}. Are you sure this database exists?`);
       }
 
       // Get existing attributes - handle both array and undefined cases
