@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Database, BookOpen, Github, Radio } from "lucide-react";
+import { Database, BookOpen, Github, Radio, ToolCase } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { CursorEffect } from "../components/cursor-effect";
@@ -79,12 +79,6 @@ export default function DemoPage() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="px-4 py-2 rounded-lg bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-900 transition-all"
-            >
-              ← Back
-            </Link>
             <a 
               href="https://appwrite-orm.readthedocs.io"
               target="_blank"
@@ -103,6 +97,19 @@ export default function DemoPage() {
               <Github className="h-4 w-4" />
               GitHub
             </a>
+            <Link
+              href="/tools"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-red-500 transition-colors"
+            >
+              <ToolCase></ToolCase>
+              Other appwrite tools
+            </Link>
+                        <Link
+              href="/"
+              className="px-4 py-2 rounded-lg bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-900 transition-all"
+            >
+              ← Back
+            </Link>
           </div>
         </div>
 

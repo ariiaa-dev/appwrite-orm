@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Database, Zap, Shield, Code2, GitBranch, CheckCircle2, ArrowRight, Github, BookOpen, Star, ALargeSmallIcon, CircleSmall, MoveDownIcon } from "lucide-react";
+import { Database, Zap, Shield, Code2, GitBranch, CheckCircle2, ArrowRight, Github, BookOpen, Star, ALargeSmallIcon, CircleSmall, MoveDownIcon, ToolCase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CursorEffect } from "./components/cursor-effect";
 import Image from "next/image";
@@ -41,9 +41,9 @@ export default function Home() {
   ];
 
   const futurePlans = [
-    "A showcase of other useful appwrite extensions and software",
     "An Appwrite-ORM MCP server",
-    "Optimize code quality, security and optimize for production"
+    "Optimize code quality, security and optimize for production",
+    "Better error handling"
   ];
 
   const codeExample = `import { ServerORM } from 'appwrite-orm/server';
@@ -158,6 +158,13 @@ const user = await db.table('users').create({
               >
                 <Github className="h-4 w-4" />
                 GitHub
+              </a>
+              <a 
+                href="/tools"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[--color-primary-500] dark:hover:text-[--color-primary-400] transition-colors"
+              >
+                <ToolCase></ToolCase>
+                Other appwrite tools
               </a>
             </div>
           </div>
