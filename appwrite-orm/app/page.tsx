@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Database, Zap, Shield, Code2, GitBranch, CheckCircle2, ArrowRight, Github, BookOpen, Star } from "lucide-react";
+import { Database, Zap, Shield, Code2, GitBranch, CheckCircle2, ArrowRight, Github, BookOpen, Star, ALargeSmallIcon, CircleSmall, MoveDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CursorEffect } from "./components/cursor-effect";
 import Image from "next/image";
@@ -20,13 +20,13 @@ export default function Home() {
     },
     {
       icon: Shield,
-      title: "Schema Validation",
-      description: "Built-in validation ensures data integrity with support for required fields, enums, and constraints",
+      title: "Caching",
+      description: "Built in caching system for web and servers",
     },
     {
-      icon: Code2,
-      title: "Intuitive API",
-      description: "Clean, expressive syntax inspired by popular ORMs like TypeORM and Prisma",
+      icon: MoveDownIcon,
+      title: "Minimal package size",
+      description: "Only dependent on appwrite and node-appwrite, making for a small package size",
     },
     {
       icon: GitBranch,
@@ -35,8 +35,8 @@ export default function Home() {
     },
     {
       icon: CheckCircle2,
-      title: "Universal Support",
-      description: "Works seamlessly in both Node.js server environments and browser-based applications",
+      title: "Export database",
+      description: "Built in functions to export your database to SQL, firebase rules, etc",
     },
   ];
 
@@ -364,7 +364,15 @@ const user = await db.table('users').create({
                     <div className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
                       <div className="flex flex-col">
                         <p>Migrations from Appwrite to SQL, Firebase and text. So you're never stuck on 1 of these</p>
-                        <p>Built-in Caching system for appwrite</p>
+                      </div>
+                    </div>
+                  </div>
+                  <Star className="h-5 w-5 text-[--color-primary-500] dark:text-[--color-primary-400] shrink-0 mt-1" />
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Built in caching</h3>
+                    <div className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                      <div className="flex flex-col">
+                        <p>A simple, built-in caching system using appwrite listeners</p>
                       </div>
                     </div>
                   </div>
