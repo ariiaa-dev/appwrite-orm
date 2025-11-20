@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { ServerORM } from '../src/server/orm';
+import { ServerORM } from 'appwrite-orm/server';
 
 // Load environment variables
 config();
