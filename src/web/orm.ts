@@ -79,7 +79,7 @@ export class WebORM {
           await this.db.getCollection(this.config.databaseId, collectionId);
         } catch (error) {
           throw new ORMMigrationError(
-            `Collection ${collectionId} does not exist in database. Please create it first or use ServerORM with autoMigrate.`
+            `Received this internal error: ${error}. Are you sure this collection exists?`
           );
         }
       }
