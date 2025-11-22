@@ -1,12 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Database, Zap, Shield, Code2, GitBranch, CheckCircle2, ArrowRight, Github, BookOpen, Star, ALargeSmallIcon, CircleSmall, MoveDownIcon, ToolCase } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Database, Zap, Shield, Code2, GitBranch, CheckCircle2, ArrowRight, Github, BookOpen, Star, ALargeSmallIcon, CircleSmall, MoveDownIcon, ToolCase, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CursorEffect } from "./components/cursor-effect";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const features = [
     {
       icon: Database,
@@ -76,7 +78,7 @@ const user = await db.table('users').create({
 });`;
 
   return (
-    <div className="relative min-h-screen overflow-hidden cursor-none">
+    <div className="relative min-h-screen overflow-hidden md:cursor-none">
       <CursorEffect />
       {/* Hexagonal Background */}
       <div className="absolute inset-0 bg-white dark:bg-gray-950">
@@ -136,11 +138,13 @@ const user = await db.table('users').create({
                 height={32}
                 className="h-8 w-8"
               />
-              <span className="text-2xl font-bold bg-gradient-to-r from-[--color-primary-500] to-[--color-primary-600] bg-clip-text text-transparent">
+              <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-[--color-primary-500] to-[--color-primary-600] bg-clip-text text-transparent">
                 Appwrite ORM
               </span>
             </div>
-            <div className="flex items-center gap-4">
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-4">
               <a 
                 href="https://appwrite-orm.readthedocs.io"
                 target="_blank"
@@ -163,11 +167,64 @@ const user = await db.table('users').create({
                 href="/tools"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[--color-primary-500] dark:hover:text-[--color-primary-400] transition-colors"
               >
-                <ToolCase></ToolCase>
-                Other appwrite tools
+                <ToolCase className="h-4 w-4" />
+                Tools
               </a>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
+
+          {/* Mobile Navigation */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="md:hidden overflow-hidden"
+              >
+                <div className="flex flex-col gap-2 pt-4 pb-2">
+                  <a 
+                    href="https://appwrite-orm.readthedocs.io"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Docs
+                  </a>
+                  <a 
+                    href="https://github.com/raisfeld-ori/appwrite-orm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Github className="h-4 w-4" />
+                    GitHub
+                  </a>
+                  <a 
+                    href="/tools"
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <ToolCase className="h-4 w-4" />
+                    Tools
+                  </a>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.nav>
 
         {/* Hero Section */}

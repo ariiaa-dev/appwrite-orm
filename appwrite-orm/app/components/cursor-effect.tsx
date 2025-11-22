@@ -5,6 +5,7 @@ import { motion, useMotionValue, useSpring } from "framer-motion";
 
 export function CursorEffect() {
   const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [trail, setTrail] = useState<Array<{ x: number; y: number; id: number }>>([]);
 
   const cursorX = useMotionValue(-100);
@@ -15,6 +16,16 @@ export function CursorEffect() {
   const cursorYSpring = useSpring(cursorY, springConfig);
 
   useEffect(() => {
+    // Check if device is mobile/touch
+    const checkMobile = () => {
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth < 768;
+      setIsMobile(isTouchDevice || isSmallScreen);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
     let trailId = 0;
 
     const moveCursor = (e: MouseEvent) => {
@@ -57,11 +68,13 @@ export function CursorEffect() {
       window.removeEventListener("mousemove", moveCursor);
       document.removeEventListener("mouseleave", handleMouseLeave);
       document.removeEventListener("mouseenter", handleMouseEnter);
+      window.removeEventListener('resize', checkMobile);
       clearInterval(trailCleanup);
     };
   }, [cursorX, cursorY]);
 
-  if (!isVisible) return null;
+  // Don't render on mobile devices
+  if (isMobile || !isVisible) return null;
 
   return (
     <>

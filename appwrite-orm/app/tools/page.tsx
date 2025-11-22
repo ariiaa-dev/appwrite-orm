@@ -1,7 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Database, BookOpen, Github, ExternalLink, Send } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Database, BookOpen, Github, ExternalLink, Send,
+  Rocket, Zap, Code, Sparkles, Box, Layers, Package,
+  Terminal, Cpu, Cloud, Server, Globe, Lock, Key,
+  Shield, Star, Heart, Flame, Coffee, Music, Camera,
+  Palette, Brush, Pen, Feather, Compass, Map, Navigation,
+  Menu, X
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -10,6 +17,7 @@ import { WebORM } from "appwrite-orm";
 import { useEffect, useState } from "react";
 
 export default function ToolsPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   // Initialize WebORM
   const orm = new WebORM({
     endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || '',
@@ -28,6 +36,24 @@ export default function ToolsPage() {
     contactEmail: "",
   });
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+  // Array of available icons
+  const iconComponents = [
+    Rocket, Zap, Code, Sparkles, Box, Layers, Package,
+    Terminal, Cpu, Cloud, Server, Globe, Lock, Key,
+    Shield, Star, Heart, Flame, Coffee, Music, Camera,
+    Palette, Brush, Pen, Feather, Compass, Map, Navigation, Database
+  ];
+
+  // Function to get a consistent random icon for a project based on its name
+  const getProjectIcon = (projectName: string) => {
+    let hash = 0;
+    for (let i = 0; i < projectName.length; i++) {
+      hash = projectName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % iconComponents.length;
+    return iconComponents[index];
+  };
 
   useEffect(() => {
     loadShowcaseProjects();
@@ -90,7 +116,7 @@ export default function ToolsPage() {
           }
         }
       ]);
-      console.log("1")
+
       await db.table('requests').create({
         projectName: formData.projectName,
         description: formData.description,
@@ -101,7 +127,7 @@ export default function ToolsPage() {
         status: 'pending',
         submittedAt: new Date().toISOString(),
       } as any);
-      console.log("2")
+
       setSubmitStatus({ type: 'success', message: 'Your project has been submitted for review!' });
       setFormData({
         projectName: "",
@@ -121,7 +147,7 @@ export default function ToolsPage() {
   const tools = showcaseProjects;
 
   return (
-    <div className="relative min-h-screen overflow-hidden cursor-none">
+    <div className="relative min-h-screen overflow-hidden md:cursor-none">
       <CursorEffect />
       {/* Hexagonal Background */}
       <div className="absolute inset-0 bg-white dark:bg-gray-950">
@@ -181,11 +207,13 @@ export default function ToolsPage() {
                 height={32}
                 className="h-8 w-8"
               />
-              <span className="text-2xl font-bold bg-gradient-to-r from-[--color-primary-500] to-[--color-primary-600] bg-clip-text text-transparent">
+              <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-[--color-primary-500] to-[--color-primary-600] bg-clip-text text-transparent">
                 Appwrite Tools
               </span>
             </div>
-            <div className="flex items-center gap-4">
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-4">
               <Link
                 href="/"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[--color-primary-500] dark:hover:text-[--color-primary-400] transition-colors"
@@ -211,7 +239,59 @@ export default function ToolsPage() {
                 GitHub
               </a>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
+
+          {/* Mobile Navigation */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="md:hidden overflow-hidden"
+              >
+                <div className="flex flex-col gap-2 pt-4 pb-2">
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    ← Back to ORM
+                  </Link>
+                  <a 
+                    href="https://appwrite-orm.readthedocs.io"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Docs
+                  </a>
+                  <a 
+                    href="https://github.com/raisfeld-ori/appwrite-orm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Github className="h-4 w-4" />
+                    GitHub
+                  </a>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.nav>
 
         {/* Hero Section */}
@@ -245,7 +325,9 @@ export default function ToolsPage() {
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-6">
-                {tools.map((tool, index) => (
+                {tools.map((tool, index) => {
+                  const IconComponent = getProjectIcon(tool.name);
+                  return (
                 <motion.div
                   key={index}
                   initial={{ y: 50, opacity: 0 }}
@@ -266,7 +348,7 @@ export default function ToolsPage() {
                       "bg-gradient-to-br from-[--color-primary-500] to-[--color-primary-600]",
                       "group-hover:scale-110 transition-transform duration-300"
                     )}>
-                      <Database className="h-6 w-6 text-white" />
+                      <IconComponent className="h-6 w-6 text-white" />
                     </div>
                     <div className="flex gap-2">
                       <a
@@ -307,7 +389,7 @@ export default function ToolsPage() {
                     ))}
                   </div>
                 </motion.div>
-              ))}
+              )})}
               </div>
             )}
           </div>

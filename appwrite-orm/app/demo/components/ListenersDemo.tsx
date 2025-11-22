@@ -220,12 +220,11 @@ export function ListenersDemo() {
         </h2>
         <div className="space-y-3 font-mono text-sm">
           <div className="bg-white/20 dark:bg-gray-900/20 p-4 rounded-lg backdrop-blur-sm border border-white/20 dark:border-gray-800/20">
-            <p className="text-gray-600 dark:text-gray-400 mb-2">// Listen to all document events in a collection</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-2">// Listen to all document events in a collection (spesifically: create, destroy, update, delete)</p>
             <code className="text-black dark:text-white">
               {`const unsubscribe = db.table('messages')
   .listenToDocuments((event) => {
     console.log('Event:', event);
-    // Handle create, update, delete events
   });`}
             </code>
           </div>
