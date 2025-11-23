@@ -76,6 +76,8 @@ nav:
     - Bulk Operations: server/bulk-operations.md
     - Indexes: server/indexes.md
     - Migrations: server/migrations.md
+  - MCP Server:
+    - Overview: mcp/overview.md
 
 extra:
   social:

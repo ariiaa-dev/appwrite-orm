@@ -7,7 +7,7 @@
 
 A powerful, type-safe TypeScript ORM for Appwrite with automatic migrations, schema validation, indexes, and join support. Works seamlessly in both server-side (Node.js) and client-side (browser) environments.
 
-🌐 **[Try the Interactive Demo](https://appwrite-orm.online)** - Experience Appwrite ORM in action with live examples!
+🌐 **[Try the Interactive Demo](https://appwrite-orm.online/demo)** - Experience Appwrite ORM in action with live examples!
 
 ## Features
 
@@ -125,10 +125,32 @@ npm test
 npm run test:integration
 ```
 
+## MCP Server
+
+Access documentation via AI assistants using the Model Context Protocol:
+
+```bash
+npx appwrite-orm
+```
+
+Configure in your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "appwrite-orm-docs": {
+      "command": "npx",
+      "args": ["appwrite-orm@latest"]
+    }
+  }
+}
+```
+
 ## Documentation
 
 - [Interactive Demo](https://appwrite-orm.online) - Try it live in your browser
 - [Full Documentation](https://appwrite-orm.readthedocs.io)
+- [MCP Server Guide](https://appwrite-orm.readthedocs.io/mcp/overview/)
 - [API Reference](https://appwrite-orm.readthedocs.io/api/overview/)
 - [GitHub Repository](https://github.com/raisfeld-ori/appwrite-orm)
 
