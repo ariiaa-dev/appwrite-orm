@@ -278,4 +278,53 @@ export class ServerORMInstance<T extends TableDefinition[]> {
       }
     });
   }
+
+  /**
+   * Export all data from all tables to JSON
+   * Returns a JSON string with all collections and their documents
+   */
+  async exportDataToJSON(): Promise<string> {
+    const data = await this.exportDataToObject();
+    return JSON.stringify(data, null, 2);
+  }
+
+  /**
+   * Export all data from all tables as an object
+   * Returns an object with collection names as keys and document arrays as values
+   */
+  async exportDataToObject(): Promise<Record<string, any[]>> {
+    const data: Record<string, any[]> = {};
+    
+    for (const [tableName, table] of this.tables.entries()) {
+      data[tableName] = await table.exportToArray();
+    }
+    
+    return data;
+  }
+
+  /**
+   * Export data from specific tables to JSON
+   */
+  async exportTablesDataToJSON(tableNames: string[]): Promise<string> {
+    const data = await this.exportTablesDataToObject(tableNames);
+    return JSON.stringify(data, null, 2);
+  }
+
+  /**
+   * Export data from specific tables as an object
+   */
+  async exportTablesDataToObject(tableNames: string[]): Promise<Record<string, any[]>> {
+    const data: Record<string, any[]> = {};
+    
+    for (const tableName of tableNames) {
+      const table = this.tables.get(tableName);
+      if (table) {
+        data[tableName] = await table.exportToArray();
+      } else {
+        throw new Error(`Table '${tableName}' not found`);
+      }
+    }
+    
+    return data;
+  }
 }

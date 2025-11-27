@@ -2,27 +2,29 @@ import { Client, Databases } from 'node-appwrite';
 import { TableDefinition, ORMConfig, DatabaseSchema, validateRequiredConfig } from '../shared/types';
 import { Migration } from './migration';
 import { ServerORMInstance } from './orm-instance';
-import { ClientWrapper } from './appwrite-extended';
+import { FakeServerORMInstance } from './fake-orm-instance';
 
 export class ServerORM {
-  private client: Client;
-  private databases: Databases;
+  private client?: Client;
+  private databases?: Databases;
   private config: ORMConfig;
   private schemas: Map<string, DatabaseSchema> = new Map();
   private collectionIds: Map<string, string> = new Map(); // Map table name to collection ID
-  private migration: Migration;
+  private migration?: Migration;
 
   constructor(config: ORMConfig) {
-    // Validate required configuration values
-    validateRequiredConfig(config);
-    
-    if (!config.apiKey) {
-      throw new Error('API key is required for server-side ORM');
+    // Validate required configuration values (skip if in development mode)
+    if (!config.development) {
+      validateRequiredConfig(config);
+      
+      if (!config.apiKey) {
+        throw new Error('API key is required for server-side ORM');
+      }
     }
 
-    // Set autoValidate default to true
+    // Set autoValidate default to true (unless in development mode)
     if (config.autoValidate === undefined) {
-      config.autoValidate = true;
+      config.autoValidate = !config.development;
     }
 
     // If autoMigrate is true, autoValidate must also be true
@@ -31,27 +33,31 @@ export class ServerORM {
     }
 
     this.config = config;
-    this.client = new Client();
-    
-    // Set endpoint and project
-    this.client
-      .setEndpoint(config.endpoint)
-      .setProject(config.projectId);
-    
-    // Set API key for server-side operations
-    // The setKey method exists in the node SDK but isn't in TypeScript types
-    if (config.apiKey) {
-      (this.client as any).setKey(config.apiKey);
+
+    // Only initialize Appwrite client if not in development mode
+    if (!config.development) {
+      this.client = new Client();
+      
+      // Set endpoint and project
+      this.client
+        .setEndpoint(config.endpoint)
+        .setProject(config.projectId);
+      
+      // Set API key for server-side operations
+      // The setKey method exists in the node SDK but isn't in TypeScript types
+      if (config.apiKey) {
+        (this.client as any).setKey(config.apiKey);
+      }
+      
+      this.databases = new Databases(this.client);
+      this.migration = new Migration(this.databases, this.config);
     }
-    
-    this.databases = new Databases(this.client);
-    this.migration = new Migration(this.databases, this.config);
   }
 
   /**
    * Initialize the ORM with table definitions and optional migration
    */
-  async init<T extends TableDefinition[]>(tables: T): Promise<ServerORMInstance<T>> {
+  async init<T extends TableDefinition[]>(tables: T): Promise<ServerORMInstance<T> | FakeServerORMInstance<T>> {
     // Store schemas and collection IDs
     tables.forEach(table => {
       const collectionId = table.id || table.name;
@@ -59,14 +65,20 @@ export class ServerORM {
       this.collectionIds.set(table.name, collectionId);
     });
 
-    // Auto-migrate if enabled
-    if (this.config.autoMigrate) {
-      await this.migration.migrate(tables);
-    } else if (this.config.autoValidate) {
-      // Validate database structure if autoValidate is enabled
-      await this.migration.validate(tables);
+    // If in development mode, return fake instance
+    if (this.config.development) {
+      console.log('[AppwriteORM Server] Running in DEVELOPMENT mode - using in-memory storage');
+      return new FakeServerORMInstance(this.config.databaseId, this.schemas, this.collectionIds);
     }
 
-    return new ServerORMInstance(this.databases, this.config.databaseId, this.schemas, this.collectionIds, this.migration, tables, this.client, this.config);
+    // Auto-migrate if enabled
+    if (this.config.autoMigrate) {
+      await this.migration!.migrate(tables);
+    } else if (this.config.autoValidate) {
+      // Validate database structure if autoValidate is enabled
+      await this.migration!.validate(tables);
+    }
+
+    return new ServerORMInstance(this.databases!, this.config.databaseId, this.schemas, this.collectionIds, this.migration, tables, this.client, this.config);
   }
 }

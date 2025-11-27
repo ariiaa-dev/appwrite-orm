@@ -1,26 +1,26 @@
 import { TableDefinition, DatabaseSchema, JoinOptions } from '../shared/types';
-import { FakeDatabaseClient } from './fake-database';
-import { FakeTable } from './fake-table';
+import { FakeServerDatabaseClient } from './fake-database';
+import { FakeServerTable } from './fake-table';
 
 /**
- * Fake ORM instance for development mode
- * Mimics WebORMInstance API but uses cookies instead of Appwrite
+ * Fake ORM instance for server-side development mode
+ * Mimics ServerORMInstance API but uses in-memory storage instead of Appwrite
  */
-export class FakeORMInstance<T extends TableDefinition[]> {
-  private tables: Map<string, FakeTable<any>> = new Map();
-  private fakeDb: FakeDatabaseClient;
+export class FakeServerORMInstance<T extends TableDefinition[]> {
+  private tables: Map<string, FakeServerTable<any>> = new Map();
+  private fakeDb: FakeServerDatabaseClient;
 
   constructor(
     databaseId: string,
     private schemas: Map<string, DatabaseSchema>,
     private collectionIds: Map<string, string> = new Map()
   ) {
-    this.fakeDb = new FakeDatabaseClient(databaseId);
+    this.fakeDb = new FakeServerDatabaseClient(databaseId);
 
     // Initialize table instances
     for (const [name, schema] of schemas.entries()) {
       const collectionId = collectionIds.get(name) || name;
-      const table = new FakeTable(this.fakeDb, collectionId, schema);
+      const table = new FakeServerTable(this.fakeDb, collectionId, schema);
       this.tables.set(name, table);
     }
   }
@@ -28,7 +28,7 @@ export class FakeORMInstance<T extends TableDefinition[]> {
   /**
    * Get a table instance by name
    */
-  table<K extends T[number]['name']>(name: K): FakeTable<Extract<T[number], { name: K }>['schema'], any> {
+  table<K extends T[number]['name']>(name: K): FakeServerTable<Extract<T[number], { name: K }>['schema'], any> {
     const table = this.tables.get(name);
     if (!table) {
       throw new Error(`Table ${name} not found`);
@@ -91,6 +91,26 @@ export class FakeORMInstance<T extends TableDefinition[]> {
    */
   async delete<K extends T[number]['name']>(collection: K, documentId: string): Promise<void> {
     return this.table(collection).delete(documentId);
+  }
+
+  /**
+   * Legacy method - Create a new collection (server-only feature)
+   * @deprecated Use table(name).createCollection() instead
+   */
+  async createCollection<K extends T[number]['name']>(
+    collectionId: K,
+    name: string,
+    permissions?: string[]
+  ): Promise<void> {
+    return this.table(collectionId).createCollection(name, permissions);
+  }
+
+  /**
+   * Legacy method - Delete a collection (server-only feature)
+   * @deprecated Use table(name).deleteCollection() instead
+   */
+  async deleteCollection<K extends T[number]['name']>(collectionId: K): Promise<void> {
+    return this.table(collectionId).deleteCollection();
   }
 
   /**
@@ -196,21 +216,24 @@ export class FakeORMInstance<T extends TableDefinition[]> {
   }
 
   /**
-   * Clear all development data
+   * Export schema to SQL format (not supported in fake mode)
    */
-  clearAll(): void {
-    this.fakeDb.clearDatabase();
+  exportToSQL(): string {
+    throw new Error('Schema export functionality is not available in development mode');
   }
 
   /**
-   * Close all listeners across all tables (useful for test cleanup)
+   * Export schema to Firebase format (not supported in fake mode)
    */
-  closeListeners(): void {
-    Object.values(this.tables).forEach(table => {
-      if (table && typeof table.closeListeners === 'function') {
-        table.closeListeners();
-      }
-    });
+  exportToFirebase(): string {
+    throw new Error('Schema export functionality is not available in development mode');
+  }
+
+  /**
+   * Export schema to text format (not supported in fake mode)
+   */
+  exportToText(): string {
+    throw new Error('Schema export functionality is not available in development mode');
   }
 
   /**
@@ -260,5 +283,23 @@ export class FakeORMInstance<T extends TableDefinition[]> {
     }
     
     return data;
+  }
+
+  /**
+   * Clear all development data
+   */
+  clearAll(): void {
+    this.fakeDb.clearDatabase();
+  }
+
+  /**
+   * Close all listeners across all tables (useful for test cleanup)
+   */
+  closeListeners(): void {
+    this.tables.forEach(table => {
+      if (table && typeof table.closeListeners === 'function') {
+        table.closeListeners();
+      }
+    });
   }
 }

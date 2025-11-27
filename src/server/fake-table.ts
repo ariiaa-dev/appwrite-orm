@@ -1,19 +1,20 @@
 import { DatabaseSchema } from '../shared/types';
-import { FakeDatabaseClient } from './fake-database';
+import { FakeServerDatabaseClient } from './fake-database';
 import { Validator } from '../shared/utils';
+import { Query } from 'node-appwrite';
 
 /**
- * Fake table implementation for development mode
- * Mimics WebTable API but uses cookies instead of Appwrite
+ * Fake table implementation for server-side development mode
+ * Mimics ServerTable API but uses in-memory storage instead of Appwrite
  */
-export class FakeTable<T extends DatabaseSchema, TInterface = any> {
+export class FakeServerTable<T extends DatabaseSchema, TInterface = any> {
   private listeners: Map<string, ((event: any) => void)[]> = new Map();
   private lastSnapshot: any[] = [];
   private pollInterval?: NodeJS.Timeout;
   private updated: boolean = true;
 
   constructor(
-    private fakeDb: FakeDatabaseClient,
+    private fakeDb: FakeServerDatabaseClient,
     private collectionId: string,
     private schema: T
   ) {
@@ -90,24 +91,63 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
   /**
    * Query documents with filters
    */
-  async query(filters?: Record<string, unknown>): Promise<TInterface[]> {
+  async query(filters?: Record<string, unknown>, options?: any): Promise<TInterface[]> {
     const result = this.fakeDb.listDocuments(this.collectionId, filters);
-    return result.documents as TInterface[];
+    let documents = result.documents as TInterface[];
+
+    // Apply ordering
+    if (options?.orderBy) {
+      options.orderBy.forEach((order: string) => {
+        const isDesc = order.startsWith('-');
+        const field = isDesc ? order.substring(1) : order;
+        
+        documents.sort((a: any, b: any) => {
+          const aVal = a[field];
+          const bVal = b[field];
+          
+          if (aVal < bVal) return isDesc ? 1 : -1;
+          if (aVal > bVal) return isDesc ? -1 : 1;
+          return 0;
+        });
+      });
+    }
+
+    // Apply pagination
+    if (options?.offset) {
+      documents = documents.slice(options.offset);
+    }
+    if (options?.limit) {
+      documents = documents.slice(0, options.limit);
+    }
+
+    // Apply select fields
+    if (options?.select) {
+      documents = documents.map((doc: any) => {
+        const selected: any = {};
+        options.select.forEach((field: string) => {
+          if (field in doc) {
+            selected[field] = doc[field];
+          }
+        });
+        return selected;
+      });
+    }
+
+    return documents;
   }
 
   /**
    * Get all documents
    */
-  async all(): Promise<TInterface[]> {
-    return this.query();
+  async all(options?: any): Promise<TInterface[]> {
+    return this.query(undefined, options);
   }
 
   /**
    * Find documents with Appwrite-like queries (simplified for development)
-   * Note: In development mode, only basic equality filters work through query()
    */
   async find(queries: string[]): Promise<TInterface[]> {
-    console.warn('[AppwriteORM Development Mode] Advanced Appwrite queries are not fully supported. Use query() with simple filters instead.');
+    console.warn('[FakeServerTable] Advanced Appwrite queries are not fully supported in development mode. Use query() with simple filters instead.');
     return this.all();
   }
 
@@ -115,7 +155,7 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
    * Find first document matching filter
    */
   async first(filters?: Record<string, unknown>): Promise<TInterface | null> {
-    const results = await this.query(filters);
+    const results = await this.query(filters, { limit: 1 });
     return results.length > 0 ? results[0] : null;
   }
 
@@ -143,6 +183,91 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
   async count(filters?: Record<string, unknown>): Promise<number> {
     const result = this.fakeDb.listDocuments(this.collectionId, filters);
     return result.total;
+  }
+
+  /**
+   * Bulk create documents
+   */
+  async bulkCreate(documents: Partial<Omit<any, '$id'>>[]): Promise<any[]> {
+    const results: any[] = [];
+    for (const doc of documents) {
+      const result = await this.create(doc);
+      results.push(result);
+    }
+    return results;
+  }
+
+  /**
+   * Bulk update documents
+   */
+  async bulkUpdate(updates: { id: string; data: Partial<Record<string, unknown>> }[]): Promise<any[]> {
+    const results: any[] = [];
+    for (const update of updates) {
+      const result = await this.update(update.id, update.data as any);
+      results.push(result);
+    }
+    return results;
+  }
+
+  /**
+   * Bulk delete documents
+   */
+  async bulkDelete(ids: string[]): Promise<void> {
+    for (const id of ids) {
+      await this.delete(id);
+    }
+  }
+
+  /**
+   * Create collection (no-op in fake mode)
+   */
+  async createCollection(name?: string, permissions?: string[]): Promise<void> {
+    console.log(`[FakeServerTable] Collection '${name || this.collectionId}' created (fake mode)`);
+  }
+
+  /**
+   * Delete collection (no-op in fake mode)
+   */
+  async deleteCollection(): Promise<void> {
+    console.log(`[FakeServerTable] Collection '${this.collectionId}' deleted (fake mode)`);
+    this.fakeDb.clearDatabase();
+  }
+
+  /**
+   * Create index (no-op in fake mode)
+   */
+  async createIndex(index: any): Promise<void> {
+    console.log(`[FakeServerTable] Index '${index.key}' created (fake mode)`);
+  }
+
+  /**
+   * Delete index (no-op in fake mode)
+   */
+  async deleteIndex(key: string): Promise<void> {
+    console.log(`[FakeServerTable] Index '${key}' deleted (fake mode)`);
+  }
+
+  /**
+   * List indexes (returns empty array in fake mode)
+   */
+  async listIndexes(): Promise<any[]> {
+    return [];
+  }
+
+  /**
+   * Export all documents in this table to JSON
+   */
+  async exportToJSON(): Promise<string> {
+    const result = this.fakeDb.listDocuments(this.collectionId);
+    return JSON.stringify(result.documents, null, 2);
+  }
+
+  /**
+   * Export all documents in this table as an array
+   */
+  async exportToArray(): Promise<TInterface[]> {
+    const result = this.fakeDb.listDocuments(this.collectionId);
+    return result.documents as TInterface[];
   }
 
   /**
@@ -216,7 +341,7 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
       try {
         listener(event);
       } catch (error) {
-        console.warn('[FakeTable] Error in event listener:', error);
+        console.warn('[FakeServerTable] Error in event listener:', error);
       }
     });
 
@@ -226,7 +351,7 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
       try {
         listener(event);
       } catch (error) {
-        console.warn('[FakeTable] Error in event listener:', error);
+        console.warn('[FakeServerTable] Error in event listener:', error);
       }
     });
 
@@ -242,7 +367,7 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
       try {
         listener(collectionEvent);
       } catch (error) {
-        console.warn('[FakeTable] Error in event listener:', error);
+        console.warn('[FakeServerTable] Error in event listener:', error);
       }
     });
 
@@ -258,7 +383,7 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
       try {
         listener(databaseEvent);
       } catch (error) {
-        console.warn('[FakeTable] Error in event listener:', error);
+        console.warn('[FakeServerTable] Error in event listener:', error);
       }
     });
   }
@@ -294,27 +419,27 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
    * Realtime methods (functional in development mode with mock data)
    */
   listen(channel: string, onEvent: (event: any) => void): () => void {
-    console.log(`[FakeTable] Listening to channel: databases.fake-db.collections.${this.collectionId}.${channel}`);
+    console.log(`[FakeServerTable] Listening to channel: databases.fake-db.collections.${this.collectionId}.${channel}`);
     return this.addListener(channel, onEvent);
   }
 
   listenToDocuments(onEvent: (event: any) => void): () => void {
-    console.log(`[FakeTable] Listening to all documents in collection: ${this.collectionId}`);
+    console.log(`[FakeServerTable] Listening to all documents in collection: ${this.collectionId}`);
     return this.addListener('documents', onEvent);
   }
 
   listenToDocument(documentId: string, onEvent: (event: any) => void): () => void {
-    console.log(`[FakeTable] Listening to document: ${documentId} in collection: ${this.collectionId}`);
+    console.log(`[FakeServerTable] Listening to document: ${documentId} in collection: ${this.collectionId}`);
     return this.addListener(`documents.${documentId}`, onEvent);
   }
 
   listenToCollection(onEvent: (event: any) => void): () => void {
-    console.log(`[FakeTable] Listening to collection: ${this.collectionId}`);
+    console.log(`[FakeServerTable] Listening to collection: ${this.collectionId}`);
     return this.addListener('collection', onEvent);
   }
 
   listenToDatabase(onEvent: (event: any) => void): () => void {
-    console.log(`[FakeTable] Listening to database events`);
+    console.log(`[FakeServerTable] Listening to database events`);
     return this.addListener('database', onEvent);
   }
 
@@ -342,12 +467,12 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
       this.pollInterval = undefined;
     }
     
-    console.log(`[FakeTable] Closed listeners and polling for collection: ${this.collectionId}`);
+    console.log(`[FakeServerTable] Closed listeners and polling for collection: ${this.collectionId}`);
   }
 
   destroy(): void {
     this.closeListeners();
-    console.log(`[FakeTable] Destroyed listeners and polling for collection: ${this.collectionId}`);
+    console.log(`[FakeServerTable] Destroyed listeners and polling for collection: ${this.collectionId}`);
   }
 
   /**
@@ -379,21 +504,5 @@ export class FakeTable<T extends DatabaseSchema, TInterface = any> {
     if (errors.length > 0) {
       throw new Error(`Validation failed: ${errors.join(', ')}`);
     }
-  }
-
-  /**
-   * Export all documents in this table to JSON
-   */
-  async exportToJSON(): Promise<string> {
-    const documents = await this.exportToArray();
-    return JSON.stringify(documents, null, 2);
-  }
-
-  /**
-   * Export all documents in this table as an array
-   */
-  async exportToArray(): Promise<TInterface[]> {
-    const result = this.fakeDb.listDocuments(this.collectionId);
-    return result.documents as TInterface[];
   }
 }

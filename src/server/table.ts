@@ -198,4 +198,37 @@ export class ServerTable<T extends DatabaseSchema, TInterface = SchemaToType<T>>
     const collection = await this.db.getCollection(this.databaseId, this.collectionId);
     return collection.indexes || [];
   }
+
+  /**
+   * Export all documents in this table to JSON
+   * Fetches all documents in batches to handle large collections
+   */
+  async exportToJSON(): Promise<string> {
+    const documents = await this.exportToArray();
+    return JSON.stringify(documents, null, 2);
+  }
+
+  /**
+   * Export all documents in this table as an array
+   * Fetches all documents in batches to handle large collections
+   */
+  async exportToArray(): Promise<TInterface[]> {
+    const allDocuments: TInterface[] = [];
+    let offset = 0;
+    const limit = 100; // Fetch in batches of 100
+    let hasMore = true;
+
+    while (hasMore) {
+      const batch = await this.query(undefined, { limit, offset });
+      allDocuments.push(...batch);
+      
+      if (batch.length < limit) {
+        hasMore = false;
+      } else {
+        offset += limit;
+      }
+    }
+
+    return allDocuments;
+  }
 }

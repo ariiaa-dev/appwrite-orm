@@ -170,8 +170,31 @@ const orm = new WebORM({
 });
 ```
 
+## Exporting Data
+
+Export data from development mode:
+
+```typescript
+// Export single table
+const json = await db.table('posts').exportToJSON();
+const posts = await db.table('posts').exportToArray();
+
+// Export all tables
+const allData = await db.exportDataToJSON();
+
+// Download as file
+const blob = new Blob([allData], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'backup.json';
+a.click();
+URL.revokeObjectURL(url);
+```
+
 ## Next Steps
 
 - [Setup](setup.md) - Configure for production
 - [CRUD Operations](crud-operations.md) - Basic operations
 - [Queries](queries.md) - Query data
+- [Export Data](export-data.md) - Exporting data

@@ -11,6 +11,11 @@ export { IndexManager } from './index-manager';
 export { PermissionManager } from './permission-manager';
 export { DatabasesWrapper, ClientWrapper } from './appwrite-extended';
 
+// Fake/Development mode exports
+export { FakeServerORMInstance } from './fake-orm-instance';
+export { FakeServerTable } from './fake-table';
+export { FakeServerDatabaseClient } from './fake-database';
+
 // Re-export Appwrite utilities and shared types
 export { Query as ServerQuery } from 'node-appwrite';
 export * from '../shared/types';
