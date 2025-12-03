@@ -15,8 +15,3 @@ export { DatabasesWrapper, ClientWrapper } from './appwrite-extended';
 export { FakeServerORMInstance } from './fake-orm-instance';
 export { FakeServerTable } from './fake-table';
 export { FakeServerDatabaseClient } from './fake-database';
-
-// Re-export Appwrite utilities and shared types
-export { Query as ServerQuery } from 'node-appwrite';
-export * from '../shared/types';
-export * from '../shared/table';
