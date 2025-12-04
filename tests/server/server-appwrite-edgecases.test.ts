@@ -11,9 +11,12 @@ const hasRequiredEnvVars = !!(
   process.env.APPWRITE_API_KEY
 );
 
-const describeIfEnv = hasRequiredEnvVars ? describe : describe.skip;
-
-describeIfEnv('Server ORM Appwrite Edgecases (real env)', () => {
+if (!hasRequiredEnvVars) {
+  describe.skip('Server ORM Appwrite Edgecases (real env)', () => {
+    it('skipped due to missing APPWRITE_* env vars', () => {});
+  });
+} else {
+  describe('Server ORM Appwrite Edgecases (real env)', () => {
   const prefix = `edge_${Date.now()}_`;
   const dbId = process.env.APPWRITE_DATABASE_ID!;
   const client = new Client()
@@ -206,4 +209,5 @@ describeIfEnv('Server ORM Appwrite Edgecases (real env)', () => {
       expect(err).toBeTruthy();
     }
   }, 30000);
-});
+  });
+}
